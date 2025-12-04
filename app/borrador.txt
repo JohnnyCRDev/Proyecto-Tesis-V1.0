@@ -1,0 +1,460 @@
+# Mostrar vista previa
+st.subheader("📊 Vista previa de los datos")
+st.dataframe(df.head(10000))
+
+# ========================
+# FILTROS INTERACTIVOS
+# ========================
+
+st.sidebar.header("🔍 Filtros de búsqueda")
+
+# Asegurar formato de fecha
+if 'FECHA_INGRESO' in df.columns:
+    df['FECHA_INGRESO'] = pd.to_datetime(df['FECHA_INGRESO'], errors='coerce')
+
+if 'FECHA_EGRESO' in df.columns:
+    df['FECHA_EGRESO'] = pd.to_datetime(df['FECHA_EGRESO'], errors='coerce')
+
+# Crear columnas derivadas (Año y Mes)
+if 'FECHA_INGRESO' in df.columns:
+    df['AÑO_INGRESO'] = df['FECHA_INGRESO'].dt.year
+    df['MES_INGRESO'] = df['FECHA_INGRESO'].dt.month
+
+# Crear columnas derivadas (Año y Mes)
+if 'FECHA_EGRESO' in df.columns:
+    df['AÑO_EGRESO'] = df['FECHA_EGRESO'].dt.year
+    df['MES_EGRESO'] = df['FECHA_EGRESO'].dt.month
+
+# Listas únicas para filtros
+añoingreso = sorted(df['AÑO_INGRESO'].dropna().unique())
+añoegreso = sorted(df['AÑO_EGRESO'].dropna().unique())
+sexos = sorted(df['SEXO'].dropna().unique()) if 'SEXO' in df.columns else []
+departamento = sorted(df['DEPARTAMENTO'].dropna().unique())
+provincia = sorted(df['PROVINCIA'].dropna().unique()) if 'PROVINCIA' in df.columns else []
+distrito = sorted(df['DISTRITO'].dropna().unique()) if 'DISTRITO' in df.columns else []
+
+# Filtros en barra lateral
+año_sel1 = st.sidebar.multiselect("Selecciona Año(s) de Ingreso:", añoingreso, default=añoingreso)
+año_sel2 = st.sidebar.multiselect("Selecciona Año(s) de Egreso:", añoegreso, default=añoegreso)
+sexo_sel = st.sidebar.multiselect("Selecciona Sexo(s):", sexos, default=sexos)
+dpto_sel = st.sidebar.multiselect("Selecciona Departamento:", departamento[:10], default=departamento[:5])
+prov_sel = st.sidebar.multiselect("Selecciona Lugar de Residencia:", provincia[:10], default=provincia[:5])
+dist_sel = st.sidebar.multiselect("Selecciona Lugar de Residencia:", distrito[:10], default=distrito[:5])
+
+# Aplicar filtros al dataframe
+df_filtrado = df.copy()
+if año_sel1:
+    df_filtrado = df_filtrado[df_filtrado['AÑO_INGRESO'].isin(año_sel1)]
+if año_sel2:
+    df_filtrado = df_filtrado[df_filtrado['AÑO_EGRESO'].isin(año_sel2)]
+if sexo_sel and 'SEXO' in df_filtrado.columns:
+    df_filtrado = df_filtrado[df_filtrado['SEXO'].isin(sexo_sel)]
+if dpto_sel and 'DEPARTAMENTO' in df_filtrado.columns:
+    df_filtrado = df_filtrado[df_filtrado['DEPARTAMENTO'].isin(dpto_sel)]
+if prov_sel and 'PROVINCIA' in df_filtrado.columns:
+    df_filtrado = df_filtrado[df_filtrado['PROVINCIA'].isin(prov_sel)]
+if dist_sel and 'DISTRITO' in df_filtrado.columns:
+    df_filtrado = df_filtrado[df_filtrado['DISTRITO'].isin(dist_sel)]
+
+st.write(f"📈 Registros filtrados: {df_filtrado.shape[0]:,}")
+
+import plotly.express as px
+
+st.header("📊 Visualización de Tendencias")
+
+# === Gráfico 1: Tendencia de egresos por año ===
+if 'AÑO_INGRESO' in df_filtrado.columns:
+    ingresos_por_año = df_filtrado.groupby('AÑO_INGRESO').size().reset_index(name='TOTAL_EGRESOS')
+    fig1 = px.bar(
+        ingresos_por_año,
+        x='AÑO_INGRESO',
+        y='TOTAL_EGRESOS',
+        title="Tendencia de ingresos por año",
+        color='TOTAL_EGRESOS',
+        text='TOTAL_EGRESOS'
+    )
+    st.plotly_chart(fig1, use_container_width=True)
+    
+if 'AÑO_EGRESO' in df_filtrado.columns:
+    egresos_por_año = df_filtrado.groupby('AÑO_EGRESO').size().reset_index(name='TOTAL_EGRESOS')
+    fig1 = px.bar(
+        egresos_por_año,
+        x='AÑO_EGRESO',
+        y='TOTAL_EGRESOS',
+        title="Tendencia de egresos por año",
+        color='TOTAL_EGRESOS',
+        text='TOTAL_EGRESOS'
+    )
+    st.plotly_chart(fig1, use_container_width=True)
+
+# === Gráfico 2: Distribución por sexo ===
+if 'SEXO' in df_filtrado.columns:
+    egresos_por_sexo = df_filtrado['SEXO'].value_counts().reset_index()
+    egresos_por_sexo.columns = ['SEXO', 'TOTAL']
+    fig2 = px.pie(
+        egresos_por_sexo,
+        names='SEXO',
+        values='TOTAL',
+        title="Distribución de egresos por sexo",
+        color_discrete_sequence=px.colors.qualitative.Set3
+    )
+    st.plotly_chart(fig2, use_container_width=True)
+
+# === Gráfico 3: Principales lugares de residencia ===
+if 'LUGAR_RESIDENCIA' in df_filtrado.columns:
+    top_lugares = df_filtrado['LUGAR_RESIDENCIA'].value_counts().nlargest(10).reset_index()
+    top_lugares.columns = ['LUGAR_RESIDENCIA', 'TOTAL']
+    fig3 = px.bar(
+        top_lugares,
+        x='LUGAR_RESIDENCIA',
+        y='TOTAL',
+        title="Top 10 lugares de residencia con más egresos",
+        color='TOTAL',
+        text='TOTAL'
+    )
+    st.plotly_chart(fig3, use_container_width=True)
+    
+    -----------------------------------------------------------------------
+    -----------------------------------------------------------------------
+    
+import streamlit as st
+import pandas as pd
+
+# ========================
+# CONFIGURACIÓN INICIAL
+# ========================
+st.set_page_config(
+    page_title="Dashboard INEN - Egresos Hospitalarios",
+    page_icon="🏥",
+    layout="wide"
+)
+
+st.title("🏥 Dashboard Interactivo de Egresos Hospitalarios - INEN (2022-2025)")
+st.write("Análisis de tendencias basadas en datos abiertos del INEN.")
+
+# ========================
+# CARGA DE DATOS
+# ========================
+@st.cache_data
+def cargar_datos():
+    ruta = r"D:\PROGRAMA DE TESIS 2025 - PREGRADO\DATASET EGRESOS HOSPITALARIOS INEN\Proyecto Tesis V1.0\data\muestra_egresos_10k.csv"
+    df = pd.read_csv(ruta, encoding='latin1')
+    return df
+
+df = cargar_datos()
+st.success(f"Datos cargados correctamente: {df.shape[0]} registros y {df.shape[1]} columnas.")
+
+# Supongamos que ya cargaste tu DataFrame limpio:
+# df = pd.read_csv("ruta/dataset_limpio.csv")
+
+st.title("🧭 Explorador de Egresos Hospitalarios - Filtros Geográficos")
+
+# --- Normalizar columnas (en caso de que no lo estén)
+for col in ['DEPARTAMENTO', 'PROVINCIA', 'DISTRITO']:
+    if col in df.columns:
+        df[col] = df[col].astype(str).str.strip().str.upper()
+
+# --- Crear listas únicas y ordenadas ---
+departamentos = sorted(df['DEPARTAMENTO'].dropna().unique())
+
+# --- Filtro 1: Departamento ---
+dpto_sel = st.sidebar.selectbox("Selecciona Departamento o America (Exterior):", ["(Todos)"] + list(departamentos))
+
+# Filtrar provincias según el departamento elegido
+if dpto_sel != "(Todos)":
+    provincias = sorted(df[df['DEPARTAMENTO'] == dpto_sel]['PROVINCIA'].dropna().unique())
+else:
+    provincias = sorted(df['PROVINCIA'].dropna().unique())
+
+# --- Filtro 2: Provincia ---
+prov_sel = st.sidebar.selectbox("Selecciona una Provincia:", ["(Todas)"] + list(provincias))
+
+# Filtrar distritos según la provincia elegida
+if prov_sel != "(Todas)":
+    distritos = sorted(df[df['PROVINCIA'] == prov_sel]['DISTRITO'].dropna().unique())
+else:
+    if dpto_sel != "(Todos)":
+        distritos = sorted(df[df['DEPARTAMENTO'] == dpto_sel]['DISTRITO'].dropna().unique())
+    else:
+        distritos = sorted(df['DISTRITO'].dropna().unique())
+
+# --- Filtro 3: Distrito ---
+dist_sel = st.sidebar.selectbox("Selecciona un Distrito:", ["(Todos)"] + list(distritos))
+
+# --- Aplicar los filtros al DataFrame ---
+df_filtrado = df.copy()
+if dpto_sel != "(Todos)":
+    df_filtrado = df_filtrado[df_filtrado['DEPARTAMENTO'] == dpto_sel]
+if prov_sel != "(Todas)":
+    df_filtrado = df_filtrado[df_filtrado['PROVINCIA'] == prov_sel]
+if dist_sel != "(Todos)":
+    df_filtrado = df_filtrado[df_filtrado['DISTRITO'] == dist_sel]
+
+# --- Mostrar resultados ---
+st.subheader("📊 Datos filtrados")
+st.write(f"Registros encontrados: **{len(df_filtrado):,}**")
+
+st.dataframe(df_filtrado)
+
+# Grupos predefinidos de columnas
+grupos = {
+    "🧍 Datos del paciente": ["NUMERO", "UUID", "HISTORIA", "SEXO", "EDAD"],
+    "📅 Fechas": ["FECHA_INGRESO", "FECHA_EGRESO", "AÑO_INGRESO", "AÑO_EGRESO"],
+    "🌍 Ubicación": ["DEPARTAMENTO", "PROVINCIA", "DISTRITO"],
+}
+
+grupo_sel = st.selectbox("Selecciona una categoría de columnas:", list(grupos.keys()))
+st.dataframe(df[grupos[grupo_sel]].head(10))
+
+
+# Texto normal
+st.markdown("""
+Desde este panel podrás acceder a distintas vistas y análisis:
+- 🌍 Filtros geográficos  
+- 📅 Análisis por año  
+- ⚧️ Estadísticas por sexo  
+- 📈 Tendencias generales
+---
+""")
+
+
+##filtros geográficos
+
+import streamlit as st
+import pandas as pd
+import plotly.express as px
+
+# ========================
+# CONFIGURACIÓN INICIAL
+# ========================
+st.set_page_config(
+    page_title="Dashboard INEN - Egresos Hospitalarios",
+    page_icon="🏥",
+    layout="wide"
+)
+
+st.title("🏥 ANÁLISIS DE LAS TENDENCIAS GEOGRÁFICAS DE LOS EGRESOS HOSPITALARIOS")
+#st.write("Análisis de tendencias basadas en datos abiertos del INEN.")
+
+# ========================
+# CARGA DE DATOS
+# ========================
+@st.cache_data
+def cargar_datos():
+    ruta = r"D:\PROGRAMA DE TESIS 2025 - PREGRADO\DATASET EGRESOS HOSPITALARIOS INEN\Proyecto Tesis V1.0\data\listado_limpio.csv"
+    df = pd.read_csv(ruta, encoding='latin1')
+    return df
+
+df = cargar_datos()
+#st.success(f"✅ Datos cargados correctamente: {df.shape[0]} registros y {df.shape[1]} columnas.")
+
+#st.write("🧾 Columnas normalizadas:", list(df.columns))
+
+# ========================
+# FILTROS GEOGRÁFICOS
+# ========================
+st.sidebar.header("🎯 Filtros Geográficos")
+
+for col in ['DEPARTAMENTO', 'PROVINCIA', 'DISTRITO']:
+    if col in df.columns:
+        df[col] = df[col].astype(str).str.strip().str.upper()
+
+departamentos = sorted(df['DEPARTAMENTO'].dropna().unique())
+dpto_sel = st.sidebar.selectbox("Selecciona Departamento o América (Exterior):", ["(Todos)"] + list(departamentos))
+
+if dpto_sel != "(Todos)":
+    provincias = sorted(df[df['DEPARTAMENTO'] == dpto_sel]['PROVINCIA'].dropna().unique())
+else:
+    provincias = sorted(df['PROVINCIA'].dropna().unique())
+
+prov_sel = st.sidebar.selectbox("Selecciona una Provincia:", ["(Todas)"] + list(provincias))
+
+if prov_sel != "(Todas)":
+    distritos = sorted(df[df['PROVINCIA'] == prov_sel]['DISTRITO'].dropna().unique())
+else:
+    if dpto_sel != "(Todos)":
+        distritos = sorted(df[df['DEPARTAMENTO'] == dpto_sel]['DISTRITO'].dropna().unique())
+    else:
+        distritos = sorted(df['DISTRITO'].dropna().unique())
+
+dist_sel = st.sidebar.selectbox("Selecciona un Distrito:", ["(Todos)"] + list(distritos))
+
+df_filtrado = df.copy()
+if dpto_sel != "(Todos)":
+    df_filtrado = df_filtrado[df_filtrado['DEPARTAMENTO'] == dpto_sel]
+if prov_sel != "(Todas)":
+    df_filtrado = df_filtrado[df_filtrado['PROVINCIA'] == prov_sel]
+if dist_sel != "(Todos)":
+    df_filtrado = df_filtrado[df_filtrado['DISTRITO'] == dist_sel]
+
+# MOSTRAR RESULTADOS
+#st.subheader("📊 Datos filtrados")
+#st.write(f"Registros encontrados: **{len(df_filtrado):,}**")
+
+#st.dataframe(df_filtrado)
+
+
+#===============================
+tendenciageografica
+#===============================
+
+import streamlit as st
+import pandas as pd
+import plotly.express as px
+
+# ========================
+# CONFIGURACIÓN INICIAL
+# ========================
+st.set_page_config(
+    page_title="Dashboard INEN - Tendencias Geográficas",
+    page_icon="🌎",
+    layout="wide"
+)
+
+st.title("🏥 ANÁLISIS DE LAS TENDENCIAS GEOGRÁFICAS DE LOS EGRESOS HOSPITALARIOS")
+st.markdown("""
+<div style='text-align: justify; font-size:16px; color:#ffff; line-height:1.6;'>
+Este módulo te permite visualizar la distribución geográfica de los <b>egresos hospitalarios</b> 
+según <b>departamento, provincia y distrito</b>.  
+Aplica filtros en la barra lateral para explorar patrones regionales.
+</div>
+<hr style='margin-top:10px;'>
+""", unsafe_allow_html=True)
+
+
+# ========================
+# CARGA DE DATOS
+# ========================
+@st.cache_data
+def cargar_datos():
+    ruta = r"D:\PROGRAMA DE TESIS 2025 - PREGRADO\DATASET EGRESOS HOSPITALARIOS INEN\Proyecto Tesis V1.0\data\listado_limpio.csv"
+    df = pd.read_csv(ruta, encoding='latin1')
+    return df
+
+df = cargar_datos()
+
+# ========================
+# FILTROS GEOGRÁFICOS
+# ========================
+st.sidebar.header("🎯 Filtros Geográficos")
+
+for col in ['DEPARTAMENTO', 'PROVINCIA', 'DISTRITO']:
+    if col in df.columns:
+        df[col] = df[col].astype(str).str.strip().str.upper()
+
+departamentos = sorted(df['DEPARTAMENTO'].dropna().unique())
+dpto_sel = st.sidebar.selectbox("Selecciona Departamento o América (Exterior):", ["(Todos)"] + list(departamentos))
+
+if dpto_sel != "(Todos)":
+    provincias = sorted(df[df['DEPARTAMENTO'] == dpto_sel]['PROVINCIA'].dropna().unique())
+else:
+    provincias = sorted(df['PROVINCIA'].dropna().unique())
+
+prov_sel = st.sidebar.selectbox("Selecciona una Provincia:", ["(Todas)"] + list(provincias))
+
+if prov_sel != "(Todas)":
+    distritos = sorted(df[df['PROVINCIA'] == prov_sel]['DISTRITO'].dropna().unique())
+else:
+    if dpto_sel != "(Todos)":
+        distritos = sorted(df[df['DEPARTAMENTO'] == dpto_sel]['DISTRITO'].dropna().unique())
+    else:
+        distritos = sorted(df['DISTRITO'].dropna().unique())
+
+dist_sel = st.sidebar.selectbox("Selecciona un Distrito:", ["(Todos)"] + list(distritos))
+
+# Aplicar filtros
+df_filtrado = df.copy()
+if dpto_sel != "(Todos)":
+    df_filtrado = df_filtrado[df_filtrado['DEPARTAMENTO'] == dpto_sel]
+if prov_sel != "(Todas)":
+    df_filtrado = df_filtrado[df_filtrado['PROVINCIA'] == prov_sel]
+if dist_sel != "(Todos)":
+    df_filtrado = df_filtrado[df_filtrado['DISTRITO'] == dist_sel]
+
+#st.write(f"**Total de registros encontrados:** {len(df_filtrado):,}")
+
+# ========================
+# VISUALIZACIONES
+# ========================
+
+if len(df_filtrado) > 0:
+    st.subheader("📊 Distribución de Egresos por Ubicación Geográfica")
+
+    col1, col2 = st.columns(2)
+    with col1:
+        fig1 = px.bar(
+            df_filtrado.groupby('DEPARTAMENTO').size().reset_index(name='Egresos'),
+            x='DEPARTAMENTO', y='Egresos',
+            title="Egresos por Departamento",
+            color='Egresos', color_continuous_scale='Blues'
+        )
+        fig1.update_layout(xaxis_title="Departamento", yaxis_title="Cantidad de Egresos")
+        st.plotly_chart(fig1, use_container_width=True)
+
+    with col2:
+        fig2 = px.bar(
+            df_filtrado.groupby('PROVINCIA').size().reset_index(name='Egresos'),
+            x='PROVINCIA', y='Egresos',
+            title="Egresos por Provincia",
+            color='Egresos', color_continuous_scale='Greens'
+        )
+        fig2.update_layout(xaxis_title="Provincia", yaxis_title="Cantidad de Egresos")
+        st.plotly_chart(fig2, use_container_width=True)
+
+    col3, col4 = st.columns(2)
+    with col3:
+        fig3 = px.bar(
+            df_filtrado.groupby('DISTRITO').size().reset_index(name='Egresos'),
+            x='DISTRITO', y='Egresos',
+            title="Egresos por Distrito",
+            color='Egresos', color_continuous_scale='Purples'
+        )
+        fig3.update_layout(xaxis_title="Distrito", yaxis_title="Cantidad de Egresos")
+        st.plotly_chart(fig3, use_container_width=True)
+
+    with col4:
+        fig4 = px.pie(
+            df_filtrado, names='DEPARTAMENTO', title="Porcentaje de Egresos por Departamento",
+            color_discrete_sequence=px.colors.qualitative.Set2
+        )
+        st.plotly_chart(fig4, use_container_width=True)
+else:
+    st.warning("⚠️ No se encontraron registros con los filtros seleccionados.")
+    
+# Ejemplo de datos con coordenadas
+data = pd.DataFrame({
+    'lat': [-12.0464, -16.3989, -13.5171],
+    'lon': [-77.0428, -71.5350, -71.9780],
+    'ciudad': ['LIMA', 'CUSCO', 'AREQUIPA']
+})
+
+st.map(data)
+
+fig = px.scatter_mapbox(
+    data, lat="lat", lon="lon", hover_name="ciudad",
+    color_discrete_sequence=["#1E88E5"], zoom=5, height=500
+)
+
+fig.update_layout(mapbox_style="carto-positron", margin={"r":0,"t":0,"l":0,"b":0})
+st.plotly_chart(fig, use_container_width=True)
+
+import pydeck as pdk
+
+# Capa de puntos (Scatterplot)
+layer = pdk.Layer(
+    'ScatterplotLayer',
+    data=data,
+    get_position='[lon, lat]',
+    get_color='[0, 128, 255, 160]',
+    get_radius=50000,
+)
+
+# Configurar vista inicial
+view_state = pdk.ViewState(
+    latitude=-12.0464,
+    longitude=-77.0428,
+    zoom=5,
+    pitch=0,
+)
+
+st.pydeck_chart(pdk.Deck(layers=[layer], initial_view_state=view_state))
