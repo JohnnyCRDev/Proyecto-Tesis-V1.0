@@ -39,7 +39,7 @@ Visualiza la distribución geográfica de los <b>egresos hospitalarios</b> segú
 # ========================
 @st.cache_data
 def cargar_datos():
-    ruta = "data/listado_limpio.csv"   # tu dataset principal local
+    ruta = "https://drive.google.com/uc?id=18e0Hi6sOm9yfOJKP9LaS8cm2MHzz_Lry"   # tu dataset principal local
     df = pd.read_csv(ruta, encoding='latin1')
     for col in ["DEPARTAMENTO", "PROVINCIA", "DISTRITO"]:
         df[col] = df[col].astype(str).str.strip().str.upper()
