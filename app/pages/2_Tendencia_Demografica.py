@@ -32,9 +32,13 @@ st.title("Gráficos de Tendencias Demográficas")
 # ========================
 @st.cache_data
 def cargar_datos():
-    ruta = r"D:\PROGRAMA DE TESIS 2025 - PREGRADO\DATASET EGRESOS HOSPITALARIOS INEN\Proyecto Tesis V1.0\data\listado_limpio.csv"
-    df = pd.read_csv(ruta, encoding='utf-8-sig')
+    # Enlace transformado a formato descargable
+    url = "https://drive.google.com/uc?id=18e0Hi6sOm9yfOJKP9LaS8cm2MHzz_Lry"
+    df = pd.read_csv(url, encoding='latin1')
     return df
+
+with st.spinner("Cargando datos, por favor espera..."):
+    df = cargar_datos()
 
 df = cargar_datos()
 st.success(f"Datos cargados correctamente: {df.shape[0]} registros listos para análisis.")
@@ -141,8 +145,3 @@ if 'RANGO_EDAD' in df_f.columns:
     st.write(f"**Total general mostrado: {df_edad['TOTAL'].sum():,} egresos**")
 else:
     st.warning("No existe columna EDAD o no pudo generarse el rango.")
-
-# ========================
-# FIN
-# ========================
-st.success("✔️ Módulo de análisis ejecutado correctamente.")

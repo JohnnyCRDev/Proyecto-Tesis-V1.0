@@ -33,12 +33,12 @@ st.title("Tendencias Temporales de Egresos Hospitalarios (2022-2025)")
 st.write("Análisis de duración de estancia, volumen mensual y tendencias anuales basadas en datos del INEN.")
 
 # ========================
-# CARGA DE DATOS
+# CARGA DE DATOS DESDE GOOGLE DRIVE
 # ========================
 @st.cache_data
 def cargar_datos():
-    ruta = r"D:\PROGRAMA DE TESIS 2025 - PREGRADO\DATASET EGRESOS HOSPITALARIOS INEN\Proyecto Tesis V1.0\data\listado_limpio.csv"
-    df = pd.read_csv(ruta, encoding='latin1', parse_dates=['FECHA_INGRESO','FECHA_EGRESO'])
+    url = "https://drive.google.com/uc?id=18e0Hi6sOm9yfOJKP9LaS8cm2MHzz_Lry"
+    df = pd.read_csv(url, encoding='latin1', parse_dates=['FECHA_INGRESO','FECHA_EGRESO'])
     return df
 
 df = cargar_datos()
@@ -114,7 +114,7 @@ st.info(f"Registros filtrados: {len(df_filtrado):,}")
 
 # ========================
 # ESTADÍSTICAS DESCRIPTIVAS
-
+# ========================
 df_filtrado['DURACION_ESTANCIA'] = (df_filtrado['FECHA_EGRESO'] - df_filtrado['FECHA_INGRESO']).dt.days
 duracion_promedio = df_filtrado['DURACION_ESTANCIA'].mean()
 
@@ -134,7 +134,6 @@ egresos_anuales['Tendencia'] = egresos_anuales['Cambio_%'].apply(
 # ========================
 st.subheader("Serie temporal de egresos por mes")
 
-# Convertir a string en formato YYYY-MM para evitar problemas de JSON
 df_mes = df_filtrado.groupby(df_filtrado['FECHA_EGRESO'].dt.to_period('M')).size().reset_index(name='Egresos')
 df_mes['MES_EGRESO'] = df_mes['FECHA_EGRESO'].astype(str)
 
@@ -147,6 +146,7 @@ fig_recuperacion = px.line(
 )
 st.plotly_chart(fig_recuperacion, use_container_width=True)
 
+# ========================
 # TENDENCIAS TEMPORALES
 # ========================
 st.subheader("Promedio de egresos por mes")
@@ -158,7 +158,6 @@ def spearman_manual(x, y):
 
 spearman_coef = spearman_manual(egresos_anuales['AÑO_EGRESO'], egresos_anuales['Egresos'])
 
-# Egresos por mes (picos de invierno)
 df_filtrado['MES_NUM'] = df_filtrado['FECHA_EGRESO'].dt.month
 egresos_mensuales = df_filtrado.groupby('MES_NUM').size().reset_index(name='Egresos')
 fig_mensual = px.bar(

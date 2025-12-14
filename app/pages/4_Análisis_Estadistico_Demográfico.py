@@ -22,17 +22,16 @@ st.set_page_config(page_title="Análisis Estadístico", layout="wide")
 st.title("Análisis Estadístico de Egresos Hospitalarios")
 
 # ========================
-# CARGA DE DATOS
+# CARGA DE DATOS DESDE GOOGLE DRIVE
 # ========================
 @st.cache_data
 def load_data():
-    ruta = r"D:\PROGRAMA DE TESIS 2025 - PREGRADO\DATASET EGRESOS HOSPITALARIOS INEN\Proyecto Tesis V1.0\data\listado_limpio.csv"
-    df = pd.read_csv(ruta, encoding='utf-8-sig')
+    url = "https://drive.google.com/uc?id=18e0Hi6sOm9yfOJKP9LaS8cm2MHzz_Lry"
+    df = pd.read_csv(url, encoding='utf-8-sig')
     return df
 
 df = load_data()
 st.success(f"Datos cargados correctamente: {df.shape[0]} registros listos para análisis.")
-
 
 # ================================================================
 # FILTROS (AÑO Y EDAD) – EN LA BARRA LATERAL
@@ -82,10 +81,7 @@ st.info(
     f"Registros filtrados: **{df_filtrado.shape[0]}**"
 )
 
-
-# ================================================================
-# FUNCIONES SIN SCIPY (SPEARMAN MANUAL)
-# ================================================================
+# SPEARMAN MANUAL
 def rank_values(series):
     temp = pd.DataFrame({"v": series})
     temp["rank"] = temp["v"].rank(method="average")
@@ -107,10 +103,7 @@ def spearman_manual(x, y):
 
     return np.corrcoef(rx, ry)[0, 1]
 
-
-# ================================================================
 # ESTADÍSTICAS DESCRIPTIVAS
-# ================================================================
 st.subheader("Estadísticas Descriptivas (Filtradas)")
 
 edad_prom = df_filtrado["EDAD"].mean()
@@ -132,10 +125,7 @@ with col2:
         })
     )
 
-
-# ================================================================
 # CORRELACIÓN SPEARMAN
-# ================================================================
 st.subheader("Correlación de Spearman (Filtro aplicado)")
 
 rho = spearman_manual(df_filtrado["EDAD"], df_filtrado["NUMERO"])
@@ -145,17 +135,13 @@ if rho is None:
 else:
     st.info(f"**Coeficiente de Spearman:** `{rho:.3f}`")
 
-# ===========================
-# GRÁFICOS DEMOGRÁFICOS (2 COLUMNAS)
-# ===========================
+# GRÁFICOS DEMOGRÁFICOS 
 st.subheader("Gráficos Demográficos")
 
-# Para acelerar render si hay muchos datos
 df_plot = df_filtrado.sample(5000) if len(df_filtrado) > 5000 else df_filtrado
 
 col_g1, col_g2 = st.columns(2)
 
-# ---- COLUMNA 1 ----
 with col_g1:
     fig1, ax1 = plt.subplots(figsize=(6, 4))
     ax1.hist(df_plot["EDAD"], bins=20)
@@ -164,7 +150,6 @@ with col_g1:
     ax1.set_ylabel("Frecuencia")
     st.pyplot(fig1)
 
-# ---- COLUMNA 2 ----
 with col_g2:
     fig2, ax2 = plt.subplots(figsize=(6, 4))
     df_plot["SEXO"].value_counts().plot(kind="bar", ax=ax2)

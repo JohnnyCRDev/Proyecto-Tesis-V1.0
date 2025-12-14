@@ -2,6 +2,9 @@ import streamlit as st
 import pandas as pd
 import math
 
+# ========================
+# ESTILOS
+# ========================
 st.markdown("""
 <style>
     .stApp {
@@ -16,35 +19,25 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# ========================
 # CONFIGURACIÓN INICIAL
-# ========================
 st.set_page_config(
     page_title="Dashboard INEN - Egresos Hospitalarios",
     page_icon="",
     layout="wide"
 )
 
+# ========================
 # TÍTULO Y DESCRIPCIÓN
-
-st.set_page_config(
-    page_title="Dashboard INEN - Egresos Hospitalarios",
-    page_icon="",
-    layout="wide"
-)
-
-# ========================
-# TÍTULO PERSONALIZADO (con HTML)
 # ========================
 st.markdown("""
 <style>
 .titulo-principal {
-    font-size: 40px;              /* Tamaño del texto */
-    color: #0d6efd;               /* Color azul tipo institucional */
-    text-align: center;           /* Centrar el texto */
-    font-weight: 700;             /* Negrita */
-    font-family: 'Segoe UI', sans-serif; /* Fuente moderna */
-    margin-bottom: 10px;          /* Espacio inferior */
+    font-size: 40px;              
+    color: #0d6efd;               
+    text-align: center;           
+    font-weight: 700;             
+    font-family: 'Segoe UI', sans-serif; 
+    margin-bottom: 10px;          
 }
 .subtitulo {
     font-size: 18px;
@@ -55,33 +48,35 @@ st.markdown("""
 .linea {
     border-top: 3px solid #0d6efd;
     width: 70%;
-    margin: 0 auto 30px auto;     /* Centrar la línea */
+    margin: 0 auto 30px auto;     
 }
 </style>
 """, unsafe_allow_html=True)
 
-# Título y subtítulo
 st.markdown('<h1 class="titulo-principal"> DASHBOARD INTERACTIVO - EGRESOS HOSPITALARIOS INEN (2022–2025)</h1>', unsafe_allow_html=True)
-st.markdown('<p class="subtitulo">Sistema Interactivo de Análisis de Tendencias Geográficas, Demográficas y Temporales con datos abiertas obtenidos del portal de datos abiertos del INEN</p>', unsafe_allow_html=True)
-#st.markdown('<div class="linea"></div>', unsafe_allow_html=True)
+st.markdown('<p class="subtitulo">Sistema Interactivo de Análisis de Tendencias Geográficas, Demográficas y Temporales con datos abiertos obtenidos del portal de datos abiertos del INEN</p>', unsafe_allow_html=True)
 
-
-# CARGA DE DATOS
+# ========================
+# CARGA DE DATOS DESDE GOOGLE DRIVE
+# ========================
 @st.cache_data
 def cargar_datos():
-    ruta = r"D:\\PROGRAMA DE TESIS 2025 - PREGRADO\\DATASET EGRESOS HOSPITALARIOS INEN\\Proyecto Tesis V1.0\\data\\listado_limpio.csv"
-    df = pd.read_csv(ruta, encoding='latin1')
+    # Enlace transformado a formato descargable
+    url = "https://drive.google.com/uc?id=18e0Hi6sOm9yfOJKP9LaS8cm2MHzz_Lry"
+    df = pd.read_csv(url, encoding='latin1')
     return df
 
 with st.spinner("Cargando datos, por favor espera..."):
     df = cargar_datos()
 
-#st.success(f"✅ Datos cargados correctamente: {df.shape[0]:,} registros y {df.shape[1]} columnas.")
-
+# ========================
 # INFORMACIÓN FINAL
+# ========================
 st.caption("Usa el buscador para filtrar registros y cambia la página para navegar por los resultados.")
 
+# ========================
 # MOSTRAR RESULTADOS
+# ========================
 st.subheader("DATOS GENERALES")
 st.write(f"**Total de registros:** {len(df):,}")
 
@@ -94,9 +89,9 @@ columnas_a_mostrar = [
 columnas_a_mostrar = [col for col in columnas_a_mostrar if col in df.columns]
 df = df[columnas_a_mostrar]
 
-# FILTRO DE BÚSQUEDA + PAGINACIÓN (en una fila)
-
-# Crear dos columnas (60% - 40%)
+# ========================
+# FILTRO DE BÚSQUEDA + PAGINACIÓN
+# ========================
 col1, col2 = st.columns([3, 1.5])
 
 with col1:

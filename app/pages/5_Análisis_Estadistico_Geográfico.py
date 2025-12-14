@@ -39,12 +39,12 @@ y correlaciones exploratorias.
 """, unsafe_allow_html=True)
 
 # =======================================
-# CARGA DE DATOS
+# CARGA DE DATOS DESDE GOOGLE DRIVE
 # =======================================
 @st.cache_data
 def cargar_datos():
-    ruta = r"D:\PROGRAMA DE TESIS 2025 - PREGRADO\DATASET EGRESOS HOSPITALARIOS INEN\Proyecto Tesis V1.0\data\listado_limpio.csv"
-    df = pd.read_csv(ruta, encoding='utf-8-sig')
+    url = "https://drive.google.com/uc?id=18e0Hi6sOm9yfOJKP9LaS8cm2MHzz_Lry"
+    df = pd.read_csv(url, encoding='utf-8-sig')
     return df
 
 df = cargar_datos()
@@ -147,17 +147,14 @@ st.info(f"Registros filtrados: **{df_filtrado.shape[0]}**")
 # =======================================
 st.subheader("Estadísticas Descriptivas")
 
-# --- Porcentaje de EGRESOS por departamento ---
 conteo_departamento_egreso = df_filtrado["DEPARTAMENTO"].value_counts(normalize=True) * 100
 porcentaje_lima_egreso = conteo_departamento_egreso.get("LIMA", 0)
 porcentaje_otros_egreso = 100 - porcentaje_lima_egreso
 
-# --- Porcentaje de INGRESOS por departamento ---
 conteo_ingreso = df_filtrado["DEPARTAMENTO"].value_counts(normalize=True) * 100
 porcentaje_lima_ingreso = conteo_ingreso.get("LIMA", 0)
 porcentaje_otros_ingreso = 100 - porcentaje_lima_ingreso
 
-# 4 columnas
 colA, colB, colC, colD = st.columns(4)
 
 with colA:
@@ -171,7 +168,6 @@ with colC:
 
 with colD:
     st.metric("% de ingresos en otras regiones", f"{porcentaje_otros_ingreso:.1f}%")
-
 
 # =======================================
 # SPEARMAN GEOGRÁFICO
@@ -212,18 +208,3 @@ with col2:
         title="Distribución porcentual por Departamento"
     )
     st.plotly_chart(fig3, use_container_width=True)
-
-# =======================================
-# INTERPRETACIÓN
-# =======================================
-#st.subheader("Interpretación Automática")
-
-#interpretacion = f"""
-### ✔ Hallazgos Geográficos
-
-#- **{porcentaje_lima:.1f}%** de los egresos provienen de **Lima**, mostrando alta concentración urbana.
-#- Las zonas rurales presentan menor volumen de egresos.
-#- Spearman = **{spearman_geo:.2f}** → indica asociación moderada.
-#"""
-
-#st.write(interpretacion)

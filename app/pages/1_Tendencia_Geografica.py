@@ -39,7 +39,7 @@ Visualiza la distribución geográfica de los <b>egresos hospitalarios</b> segú
 # ========================
 @st.cache_data
 def cargar_datos():
-    ruta = r"D:\PROGRAMA DE TESIS 2025 - PREGRADO\DATASET EGRESOS HOSPITALARIOS INEN\Proyecto Tesis V1.0\data\listado_limpio.csv"
+    ruta = "data/listado_limpio.csv"   # tu dataset principal local
     df = pd.read_csv(ruta, encoding='latin1')
     for col in ["DEPARTAMENTO", "PROVINCIA", "DISTRITO"]:
         df[col] = df[col].astype(str).str.strip().str.upper()
@@ -47,7 +47,8 @@ def cargar_datos():
 
 @st.cache_data
 def cargar_coordenadas():
-    ruta_coords = r"D:\PROGRAMA DE TESIS 2025 - PREGRADO\DATASET EGRESOS HOSPITALARIOS INEN\Proyecto Tesis V1.0\data\coordenadas_distritos_peru.csv"
+    # Enlace de Google Drive transformado a formato descargable
+    ruta_coords = "https://drive.google.com/uc?id=1kDZOXpLUIGijelqasAmm-OgB1lrPmnAW"
     df_coords = pd.read_csv(ruta_coords, encoding="utf-8-sig")
     for col in ["DEPARTAMENTO", "PROVINCIA", "DISTRITO"]:
         df_coords[col] = df_coords[col].astype(str).str.strip().str.upper()
@@ -137,11 +138,11 @@ else:
     )
 
     st.pydeck_chart(
-    pdk.Deck(
-        layers=[layer],
-        initial_view_state=view_state,
-        tooltip={"text": "Departamento: {DEPARTAMENTO}\nProvincia: {PROVINCIA}\nDistrito: {DISTRITO}"}
-    ),
-    use_container_width=True,  # ocupa todo el ancho disponible
-    height=800  # aumentar altura para efecto vertical
+        pdk.Deck(
+            layers=[layer],
+            initial_view_state=view_state,
+            tooltip={"text": "Departamento: {DEPARTAMENTO}\nProvincia: {PROVINCIA}\nDistrito: {DISTRITO}"}
+        ),
+        use_container_width=True,
+        height=800
     )
