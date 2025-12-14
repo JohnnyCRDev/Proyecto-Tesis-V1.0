@@ -3,5 +3,5 @@ pandas
 pydeck
 plotly.express
 numpy
-matplotlib.pyplot
+matplotlib
 pydeck
