@@ -33,7 +33,7 @@ st.markdown("""
 <style>
 .titulo-principal {
     font-size: 40px;              
-    color: #0d6efd;               
+    color: #ffff;               
     text-align: center;           
     font-weight: 700;             
     font-family: 'Segoe UI', sans-serif; 
@@ -42,7 +42,7 @@ st.markdown("""
 .subtitulo {
     font-size: 18px;
     text-align: center;
-    color: #0d6efd;
+    color: #ffff;
     font-family: 'Segoe UI', sans-serif;
 }
 .linea {
